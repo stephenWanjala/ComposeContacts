@@ -26,13 +26,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.ContactItem
+import com.githu.stephenwanjala.composecontacts.core.presenation.components.PermissionRequestScreen
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 
@@ -45,6 +50,7 @@ fun ContactListScreen() {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val collapsedFraction = scrollBehavior.state.collapsedFraction
     val isCollapsed = collapsedFraction > 0.5f // Threshold to switch layout state
+    val numberOfContacts =remember { mutableIntStateOf(0) }
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -89,7 +95,7 @@ fun ContactListScreen() {
                                         modifier = Modifier.padding(end = 8.dp)
                                     )
                                     Text(
-                                        text = "350 Contacts",
+                                        text = "${numberOfContacts.intValue} Contacts",
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                 }
@@ -100,7 +106,7 @@ fun ContactListScreen() {
                                         style = MaterialTheme.typography.titleLarge
                                     )
                                     Text(
-                                        text = "350 Contacts",
+                                        text = "${numberOfContacts.intValue} Contacts",
                                         style = MaterialTheme.typography.labelSmall
                                     )
                                 }
@@ -126,27 +132,21 @@ fun ContactListScreen() {
                 )
             }
         ) { innerPaddings ->
-            val contacts = remember {
-                List(50) { index ->
-                    Contact(
-                        id = index.toString(),
-                        name = "Contact $index",
-                        phoneNumber = "+1 555-${index.toString().padStart(4, '0')}",
-                        email = "test${index + 1}@gmail.com",
-                        photoUri = null
-                    )
-                }
+
+            PermissionRequestScreen {
+                val viewModel: ContactsListViewModel = hiltViewModel()
+                val state =viewModel.state.collectAsStateWithLifecycle()
+                numberOfContacts.intValue = state.value.contacts.size
+                ContactsList(
+                    contacts = state.value.contacts,
+                    modifier = Modifier
+                        .padding(innerPaddings)
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                )
             }
-            ContactsList(
-                contacts = contacts,
-                modifier = Modifier
-                    .padding(innerPaddings)
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
-            )
         }
     }
 }
-
 
 
 @Composable

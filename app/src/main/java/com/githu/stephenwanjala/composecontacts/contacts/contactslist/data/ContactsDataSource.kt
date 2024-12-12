@@ -7,7 +7,7 @@ import android.util.Log
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import javax.inject.Inject
 
-class ContactsHelper @Inject constructor(private val contentResolver: ContentResolver) {
+class ContactsDataSource @Inject constructor(private val contentResolver: ContentResolver) {
     fun getContacts(): List<Contact> {
         val contacts = mutableListOf<Contact>()
 
