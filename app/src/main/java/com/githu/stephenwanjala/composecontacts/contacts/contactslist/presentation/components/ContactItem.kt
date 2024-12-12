@@ -1,4 +1,4 @@
-package com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation
+package com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

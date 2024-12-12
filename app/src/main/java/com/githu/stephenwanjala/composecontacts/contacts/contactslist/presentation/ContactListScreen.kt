@@ -1,16 +1,12 @@
 package com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -30,17 +26,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.lerp
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
+import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.ContactItem
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 
@@ -155,54 +147,6 @@ fun ContactListScreen() {
     }
 }
 
-
-
-
-
-@Composable
-fun ScrollableContent(
-    items: List<String>,
-    itemContent: @Composable (String) -> Unit
-) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(items) { item ->
-            itemContent(item)
-        }
-    }
-}
-
-
-//@RootNavGraph(start = true)
-@Destination
-@Composable
-fun ContactsScreen() {
-    // Sample data - replace with your actual data source
-    val contacts = remember {
-        List(50) { index ->
-            Contact(
-                id = index.toString(),
-                name = "Contact $index",
-                phoneNumber = "+1 555-${index.toString().padStart(4, '0')}",
-                email = "test${index + 1}@gmail.com",
-                photoUri = null
-            )
-        }
-    }
-
-    CollapsibleHeader(
-        headerContent = { progress ->
-            ContactsHeader(
-                progress = progress,
-                onMenuClick = { /* Handle menu click */ },
-                onSearchClick = { /* Handle search click */ }
-            )
-        }
-    ) {
-        ContactsList(contacts = contacts)
-    }
-}
 
 
 @Composable
