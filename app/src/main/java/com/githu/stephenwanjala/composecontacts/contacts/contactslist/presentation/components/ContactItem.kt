@@ -42,14 +42,14 @@ fun ContactItem(
             shape = MaterialTheme.shapes.small,
             color = MaterialTheme.colorScheme.primary
         ) {
-            if (contact.photoUri!=null && contact.photoUri.isNotEmpty()) {
+            if (contact.photoUri!=null) {
                 AsyncImage(
                     model = contact.photoUri,
                     contentDescription = null,
                 )
             } else {
                 Text(
-                    text = contact.name.first().toString(),
+                    text = contact.name.first().toString().uppercase(),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.fillMaxSize()
                         .wrapContentSize(Alignment.Center),

@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.data.ContactsDataSource
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.onStart
@@ -29,16 +28,22 @@ class ContactsListViewModel @Inject constructor(
 
 
     private fun loadContacts() {
-        _state.update { it.copy(isLoading = true) }
-        viewModelScope.launch(Dispatchers.IO) {
-            dataSource.getContacts().let { contacts ->
-                println("Contacts: $contacts")
-
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            try {
+                val contacts = dataSource.getContacts()
                 _state.update { it.copy(contacts = contacts, isLoading = false) }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to load contacts: ${e.localizedMessage}"
+                    )
+                }
             }
         }
     }
-
 }
 
 
