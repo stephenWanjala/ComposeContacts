@@ -238,26 +238,3 @@ fun ContactDetailsSection(contact: Contact) {
         }
     }
 }
-
-@Composable
-fun OpenDialer(phoneNumber: String) {
-    val context = LocalContext.current
-    val intent = remember {
-        Intent(Intent.ACTION_DIAL).apply {
-            data = Uri.parse("tel:$phoneNumber")
-        }
-    }
-    context.startActivity(intent)
-}
-
-@Composable
-fun OpenEmailApp(email: String) {
-    val context = LocalContext.current
-    val intent = remember {
-        Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:$email")
-        }
-    }
-    context.startActivity(intent)
-}
-

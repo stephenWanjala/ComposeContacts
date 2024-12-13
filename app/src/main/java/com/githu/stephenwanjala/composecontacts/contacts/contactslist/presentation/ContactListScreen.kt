@@ -2,6 +2,7 @@ package com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentat
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +46,7 @@ import com.githu.stephenwanjala.composecontacts.core.presenation.components.Perm
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import org.w3c.dom.CharacterData
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -154,7 +156,7 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
                     }
                 }
                 ContactsList(
-                    contacts = state.value.contacts,
+                    groupedContacts = state.value.groupedContacts,
                     modifier = Modifier
                         .padding(innerPaddings)
                         .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -168,20 +170,41 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
 }
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ContactsList(
-    contacts: List<Contact>,
     modifier: Modifier = Modifier,
-    onClickContact: (Contact) -> Unit
+    onClickContact: (Contact) -> Unit,
+    groupedContacts: Map<Char, List<Contact>>
 
 
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize()
     ) {
-        items(contacts) { contact ->
-            ContactItem(contact = contact, onClickContact = onClickContact)
+        groupedContacts.forEach { (initial, contactsForInitial) ->
+            stickyHeader {
+                CharacterHeader(initial)
+            }
+
+            items(contactsForInitial) { contact ->
+                ContactItem (contact=contact, onClickContact = onClickContact)
+            }
         }
+    }
+}
+
+@Composable
+fun CharacterHeader(characterData: Char) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Text(
+            text = characterData.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(start = 16.dp)
+        )
     }
 }
 

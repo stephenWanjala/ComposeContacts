@@ -38,7 +38,7 @@ class ContactsListViewModel @Inject constructor(
                     println("contact phoneNumbers: ${contact.phoneNumbers}")
                     println("contact email: ${contact.email}")
                 }
-                _state.update { it.copy(contacts = contacts, isLoading = false) }
+                _state.update { it.copy(contacts = contacts, isLoading = false,groupedContacts=contacts.groupBy { it.name.first().uppercaseChar() }) }
             } catch (e: Exception) {
                 e.printStackTrace()
                 _state.update {
@@ -56,5 +56,6 @@ class ContactsListViewModel @Inject constructor(
 data class ContactsListState(
     val contacts: List<Contact> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String = ""
+    val error: String = "",
+    val groupedContacts: Map<Char, List<Contact>> = emptyMap()
 )
