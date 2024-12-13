@@ -1,7 +1,9 @@
 package com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -50,7 +53,8 @@ fun ContactListScreen() {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val collapsedFraction = scrollBehavior.state.collapsedFraction
     val isCollapsed = collapsedFraction > 0.5f // Threshold to switch layout state
-    val numberOfContacts =remember { mutableIntStateOf(0) }
+    val numberOfContacts = remember { mutableIntStateOf(0) }
+    val isLoading = remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -135,8 +139,18 @@ fun ContactListScreen() {
 
             PermissionRequestScreen {
                 val viewModel: ContactsListViewModel = hiltViewModel()
-                val state =viewModel.state.collectAsStateWithLifecycle()
+                val state = viewModel.state.collectAsStateWithLifecycle()
                 numberOfContacts.intValue = state.value.contacts.size
+                AnimatedVisibility(state.value.isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPaddings),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
                 ContactsList(
                     contacts = state.value.contacts,
                     modifier = Modifier

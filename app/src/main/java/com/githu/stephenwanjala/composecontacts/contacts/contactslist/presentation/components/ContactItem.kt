@@ -66,9 +66,9 @@ fun ContactItem(
                 text = contact.name,
                 style = MaterialTheme.typography.bodyLarge
             )
-            if (contact.phoneNumber.isNotEmpty()) {
+            if (contact.phoneNumbers.isNotEmpty()) {
                 Text(
-                    text = contact.phoneNumber,
+                    text = contact.phoneNumbers.first(),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
@@ -85,7 +85,7 @@ private fun ContactItemPreview() {
         ContactItem(
             contact = Contact(
                 id = "1",
-                phoneNumber = "+254723441943",
+                phoneNumbers = listOf("+254723441943"),
                 email = "stephenwanjala145@gmail.com",
                 name = "Wanjala Stephen",
                 photoUri = ""
