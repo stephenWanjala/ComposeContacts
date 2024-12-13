@@ -68,6 +68,7 @@ dependencies {
     ksp(libs.destinations.ksp)
 
     implementation(libs.accompanist.permissions)
+    implementation(libs.zxing.core)
 
     testImplementation(libs.junit)
 

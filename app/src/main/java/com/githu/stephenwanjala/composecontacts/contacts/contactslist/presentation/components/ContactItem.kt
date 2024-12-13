@@ -1,6 +1,6 @@
 package com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,18 +21,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import coil3.compose.rememberAsyncImagePainter
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import com.githu.stephenwanjala.composecontacts.ui.theme.ComposeContactsTheme
 
 @Composable
 fun ContactItem(
     contact: Contact,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClickContact: (Contact) -> Unit
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .clickable(onClick = { onClickContact(contact) })
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -42,7 +43,7 @@ fun ContactItem(
             shape = MaterialTheme.shapes.small,
             color = MaterialTheme.colorScheme.primary
         ) {
-            if (contact.photoUri!=null) {
+            if (contact.photoUri != null) {
                 AsyncImage(
                     model = contact.photoUri,
                     contentDescription = null,
@@ -51,7 +52,8 @@ fun ContactItem(
                 Text(
                     text = contact.name.first().toString().uppercase(),
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
                         .wrapContentSize(Alignment.Center),
                     textAlign = TextAlign.Center
                 )
@@ -77,7 +79,7 @@ fun ContactItem(
     }
 }
 
-@Preview(showBackground = true,)
+@Preview(showBackground = true)
 @PreviewLightDark
 @Composable
 private fun ContactItemPreview() {
@@ -89,7 +91,8 @@ private fun ContactItemPreview() {
                 email = "stephenwanjala145@gmail.com",
                 name = "Wanjala Stephen",
                 photoUri = ""
-            )
+            ),
+            onClickContact = {  },
         )
     }
 }

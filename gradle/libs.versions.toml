@@ -2,6 +2,7 @@
 agp = "8.7.3"
 appcompat = "1.7.0"
 coilCompose = "3.0.4"
+coreVersion = "3.5.3"
 destinationsVersion = "1.11.7"
 coreSplashscreen = "1.0.1"
 datastorePreferences = "1.1.1"
@@ -58,6 +59,7 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltC
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltCompiler" }
 hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 accompanist-permissions= {module="com.google.accompanist:accompanist-permissions",version.ref='accompanist'}
+zxing-core = { module = "com.google.zxing:core", version.ref = "coreVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

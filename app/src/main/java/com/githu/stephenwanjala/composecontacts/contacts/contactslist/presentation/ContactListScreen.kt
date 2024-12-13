@@ -40,21 +40,23 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.ContactItem
+import com.githu.stephenwanjala.composecontacts.contacts.destinations.ContactDetailsScreenDestination
 import com.githu.stephenwanjala.composecontacts.core.presenation.components.PermissionRequestScreen
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RootNavGraph(start = true)
 @Destination
 @Composable
-fun ContactListScreen() {
+fun ContactListScreen(navigator: DestinationsNavigator) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val collapsedFraction = scrollBehavior.state.collapsedFraction
     val isCollapsed = collapsedFraction > 0.5f // Threshold to switch layout state
     val numberOfContacts = remember { mutableIntStateOf(0) }
-    val isLoading = remember { mutableStateOf(false) }
+    remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -155,7 +157,10 @@ fun ContactListScreen() {
                     contacts = state.value.contacts,
                     modifier = Modifier
                         .padding(innerPaddings)
-                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                        .nestedScroll(scrollBehavior.nestedScrollConnection),
+                    onClickContact = {contact->
+                        navigator.navigate(ContactDetailsScreenDestination(contact = contact))
+                    }
                 )
             }
         }
@@ -166,13 +171,16 @@ fun ContactListScreen() {
 @Composable
 fun ContactsList(
     contacts: List<Contact>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClickContact: (Contact) -> Unit
+
+
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize()
     ) {
         items(contacts) { contact ->
-            ContactItem(contact = contact)
+            ContactItem(contact = contact, onClickContact = onClickContact)
         }
     }
 }

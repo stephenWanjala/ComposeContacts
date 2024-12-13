@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.NavGraphs
+import com.githu.stephenwanjala.composecontacts.contacts.NavGraphs
 import com.githu.stephenwanjala.composecontacts.ui.theme.ComposeContactsTheme
 import com.ramcosta.composedestinations.DestinationsNavHost
 import dagger.hilt.android.AndroidEntryPoint

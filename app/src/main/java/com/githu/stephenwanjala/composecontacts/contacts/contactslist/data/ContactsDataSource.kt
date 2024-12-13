@@ -84,6 +84,7 @@ class ContactsDataSource @Inject constructor(private val contentResolver: Conten
                 contacts.addAll(contactMap.values)
             }
         } catch (e: Exception) {
+            e.printStackTrace()
             Log.e("ContactsDataSource", "Error fetching contacts", e)
         }
 
