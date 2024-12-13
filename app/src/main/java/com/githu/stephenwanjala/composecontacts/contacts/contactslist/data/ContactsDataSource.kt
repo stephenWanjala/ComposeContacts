@@ -12,6 +12,7 @@ class ContactsDataSource @Inject constructor(private val contentResolver: Conten
         val contacts = mutableListOf<Contact>()
 
         val projection = arrayOf(
+            ContactsContract.CommonDataKinds.Phone._ID,
             ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
             ContactsContract.Data.DISPLAY_NAME_PRIMARY,
             ContactsContract.CommonDataKinds.Phone.NUMBER,

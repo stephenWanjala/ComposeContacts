@@ -1,12 +1,15 @@
 package com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -17,6 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import com.githu.stephenwanjala.composecontacts.ui.theme.ComposeContactsTheme
 
@@ -37,12 +42,20 @@ fun ContactItem(
             shape = MaterialTheme.shapes.small,
             color = MaterialTheme.colorScheme.primary
         ) {
-            Text(
-                text = contact.name.first().toString(),
-                modifier = Modifier.padding(8.dp),
-                color = MaterialTheme.colorScheme.onPrimary,
-                textAlign = TextAlign.Center
-            )
+            if (contact.photoUri!=null && contact.photoUri.isNotEmpty()) {
+                AsyncImage(
+                    model = contact.photoUri,
+                    contentDescription = null,
+                )
+            } else {
+                Text(
+                    text = contact.name.first().toString(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.fillMaxSize()
+                        .wrapContentSize(Alignment.Center),
+                    textAlign = TextAlign.Center
+                )
+            }
         }
 
         Spacer(modifier = Modifier.width(16.dp))

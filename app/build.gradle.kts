@@ -56,7 +56,7 @@ dependencies {
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
-
+    implementation(libs.coil.compose)
 
     implementation(libs.bundles.hilt)
     ksp(libs.hilt.compiler)

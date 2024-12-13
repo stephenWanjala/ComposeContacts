@@ -29,9 +29,10 @@ class ContactsListViewModel @Inject constructor(
 
 
     private fun loadContacts() {
+        _state.update { it.copy(isLoading = true) }
         viewModelScope.launch(Dispatchers.IO) {
             dataSource.getContacts().let { contacts ->
-                _state.update { it.copy(contacts = contacts) }
+                _state.update { it.copy(contacts = contacts,isLoading = false) }
             }
         }
     }
