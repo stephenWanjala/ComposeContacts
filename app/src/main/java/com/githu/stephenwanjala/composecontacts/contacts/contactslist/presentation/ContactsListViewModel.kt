@@ -32,6 +32,12 @@ class ContactsListViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true) }
             try {
                 val contacts = dataSource.getContacts()
+                for (contact in contacts) {
+                    println(contact)
+                    println("contact name: ${contact.name}")
+                    println("contact phoneNumbers: ${contact.phoneNumbers}")
+                    println("contact email: ${contact.email}")
+                }
                 _state.update { it.copy(contacts = contacts, isLoading = false) }
             } catch (e: Exception) {
                 e.printStackTrace()

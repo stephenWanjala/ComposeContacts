@@ -9,7 +9,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class ContactsDataSource @Inject constructor(private val contentResolver: ContentResolver) {
-    suspend fun getContacts(limit: Int = 100): List<Contact> = withContext(Dispatchers.IO) {
+    suspend fun getContacts(): List<Contact> = withContext(Dispatchers.IO) {
         val contacts = mutableListOf<Contact>()
 
         val projection = arrayOf(
@@ -20,12 +20,13 @@ class ContactsDataSource @Inject constructor(private val contentResolver: Conten
         )
 
         try {
+            // Fetch contacts (phone numbers) in one query
             contentResolver.query(
                 ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                 projection,
                 null,
                 null,
-                "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC "
+                "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC"
             )?.use { cursor ->
                 val contactMap = mutableMapOf<String, Contact>()
 
@@ -35,11 +36,10 @@ class ContactsDataSource @Inject constructor(private val contentResolver: Conten
                 val photoIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
 
                 while (cursor.moveToNext()) {
-                    // Safely retrieve values
-                    val contactId = if (contactIdIndex != -1) cursor.getString(contactIdIndex) ?: continue else continue
-                    val name = if (nameIndex != -1) cursor.getString(nameIndex) ?: "Unknown" else "Unknown"
-                    val phoneNumber = if (numberIndex != -1) cursor.getString(numberIndex) ?: continue else continue
-                    val photoUri = if (photoIndex != -1) cursor.getString(photoIndex) else null
+                    val contactId = cursor.getString(contactIdIndex) ?: continue
+                    val name = cursor.getString(nameIndex) ?: "Unknown"
+                    val phoneNumber = cursor.getString(numberIndex) ?: continue
+                    val photoUri = cursor.getString(photoIndex)
 
                     val contact = contactMap.getOrPut(contactId) {
                         Contact(
@@ -54,24 +54,33 @@ class ContactsDataSource @Inject constructor(private val contentResolver: Conten
                     (contact.phoneNumbers as MutableList).add(phoneNumber)
                 }
 
-                // Fetch emails
-                for (contact in contactMap.values) {
+                // Fetch emails for all contacts in a single batch query
+                val contactIds = contactMap.keys.joinToString(",")
+                if (contactIds.isNotEmpty()) {
                     val emailCursor = contentResolver.query(
                         ContactsContract.CommonDataKinds.Email.CONTENT_URI,
-                        arrayOf(ContactsContract.CommonDataKinds.Email.ADDRESS),
-                        "${ContactsContract.CommonDataKinds.Email.CONTACT_ID} = ?",
-                        arrayOf(contact.id),
+                        arrayOf(
+                            ContactsContract.CommonDataKinds.Email.CONTACT_ID,
+                            ContactsContract.CommonDataKinds.Email.ADDRESS
+                        ),
+                        "${ContactsContract.CommonDataKinds.Email.CONTACT_ID} IN ($contactIds)",
+                        null,
                         null
                     )
 
                     emailCursor?.use { ec ->
+                        val contactIdIndex = ec.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTACT_ID)
                         val emailIndex = ec.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS)
-                        if (emailIndex != -1 && ec.moveToFirst()) {
-                            contact.email = ec.getString(emailIndex)
+
+                        while (ec.moveToNext()) {
+                            val contactId = ec.getString(contactIdIndex) ?: continue
+                            val email = ec.getString(emailIndex)
+                            contactMap[contactId]?.email = email
                         }
                     }
                 }
 
+                // Add contacts to the final list
                 contacts.addAll(contactMap.values)
             }
         } catch (e: Exception) {
