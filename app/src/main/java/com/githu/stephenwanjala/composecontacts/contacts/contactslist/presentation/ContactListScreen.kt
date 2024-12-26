@@ -14,9 +14,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,7 +46,6 @@ import com.githu.stephenwanjala.composecontacts.core.presenation.components.Perm
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import org.w3c.dom.CharacterData
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,17 +72,19 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
                         onClick = {},
                         shape = CircleShape
                     ) {
-                        Icon(imageVector = Icons.Default.Edit, contentDescription = "Add contact")
+                        Icon(imageVector = Icons.Outlined.AddCircle, contentDescription = "Add contact")
                     }
-
-                    FloatingActionButton(
-                        onClick = {},
-                        shape = CircleShape
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Share,
-                            contentDescription = "Share contact"
-                        )
+//                  TODO()  share selected contact
+                    AnimatedVisibility(false) {
+                        FloatingActionButton(
+                            onClick = {},
+                            shape = CircleShape
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Share,
+                                contentDescription = "Share contact"
+                            )
+                        }
                     }
                 }
             },
