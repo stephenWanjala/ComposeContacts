@@ -2,6 +2,7 @@ package com.githu.stephenwanjala.composecontacts.contacts.contactslist.data
 
 import android.content.ContentResolver
 import android.provider.ContactsContract
+import android.telephony.PhoneNumberUtils
 import android.util.Log
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +39,8 @@ class ContactsDataSource @Inject constructor(private val contentResolver: Conten
                 while (cursor.moveToNext()) {
                     val contactId = cursor.getString(contactIdIndex) ?: continue
                     val name = cursor.getString(nameIndex) ?: "Unknown"
-                    val phoneNumber = cursor.getString(numberIndex) ?: continue
+                    val rawPhoneNumber = cursor.getString(numberIndex) ?: continue
+                    val normalizedPhoneNumber = PhoneNumberUtils.normalizeNumber(rawPhoneNumber)
                     val photoUri = cursor.getString(photoIndex)
 
                     val contact = contactMap.getOrPut(contactId) {
@@ -51,7 +53,10 @@ class ContactsDataSource @Inject constructor(private val contentResolver: Conten
                         )
                     }
 
-                    (contact.phoneNumbers as MutableList).add(phoneNumber)
+//                    (contact.phoneNumbers as MutableList).add(normalizedPhoneNumber)
+                    if (!contact.phoneNumbers.contains(normalizedPhoneNumber)) {
+                        (contact.phoneNumbers as MutableList).add(normalizedPhoneNumber)
+                    }
                 }
 
                 // Fetch emails for all contacts in a single batch query
