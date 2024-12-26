@@ -7,6 +7,8 @@ import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.mod
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -18,27 +20,48 @@ class ContactsListViewModel @Inject constructor(
     private val dataSource: ContactsDataSource
 ) : ViewModel() {
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
+
     private val _state: MutableStateFlow<ContactsListState> = MutableStateFlow(ContactsListState())
-    val state = _state
+    val state = combine(_state, _searchQuery) { state, query ->
+        if (query.isEmpty()) {
+            state
+        } else {
+            state.copy(
+                groupedContacts = state.contacts
+                    .filter { contact ->
+                        contact.name.contains(query, ignoreCase = true) ||
+                                contact.phoneNumbers.any { it.contains(query) } ||
+                                contact.email?.contains(query, ignoreCase = true) == true
+                    }
+                    .groupBy { it.name.first().uppercaseChar() }
+            )
+        }
+    }
         .onStart { loadContacts() }
         .stateIn(
-            scope = viewModelScope, SharingStarted.WhileSubscribed(5000),
-            ContactsListState()
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = ContactsListState()
         )
 
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
 
     private fun loadContacts() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
                 val contacts = dataSource.getContacts()
-                for (contact in contacts) {
-                    println(contact)
-                    println("contact name: ${contact.name}")
-                    println("contact phoneNumbers: ${contact.phoneNumbers}")
-                    println("contact email: ${contact.email}")
+                _state.update {
+                    it.copy(
+                        contacts = contacts,
+                        isLoading = false,
+                        groupedContacts = contacts.groupBy { it.name.first().uppercaseChar() }
+                    )
                 }
-                _state.update { it.copy(contacts = contacts, isLoading = false,groupedContacts=contacts.groupBy { it.name.first().uppercaseChar() }) }
             } catch (e: Exception) {
                 e.printStackTrace()
                 _state.update {
@@ -50,12 +73,16 @@ class ContactsListViewModel @Inject constructor(
             }
         }
     }
-}
 
+    fun updateSearchState(bool: Boolean) {
+        _state.update { it.copy(isSearchActive = bool) }
+    }
+}
 
 data class ContactsListState(
     val contacts: List<Contact> = emptyList(),
     val isLoading: Boolean = false,
     val error: String = "",
-    val groupedContacts: Map<Char, List<Contact>> = emptyMap()
+    val groupedContacts: Map<Char, List<Contact>> = emptyMap(),
+    val isSearchActive: Boolean = false
 )

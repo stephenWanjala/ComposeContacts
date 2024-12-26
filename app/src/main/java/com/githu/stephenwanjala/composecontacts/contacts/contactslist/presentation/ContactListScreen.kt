@@ -6,7 +6,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,16 +13,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -31,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.ContactItem
+import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.SearchableLargeTopAppBar
 import com.githu.stephenwanjala.composecontacts.contacts.destinations.ContactDetailsScreenDestination
 import com.githu.stephenwanjala.composecontacts.core.presenation.components.PermissionRequestScreen
 import com.ramcosta.composedestinations.annotation.Destination
@@ -54,97 +49,70 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 fun ContactListScreen(navigator: DestinationsNavigator) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val searchScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val collapsedFraction = scrollBehavior.state.collapsedFraction
     val isCollapsed = collapsedFraction > 0.5f // Threshold to switch layout state
     val numberOfContacts = remember { mutableIntStateOf(0) }
-    remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Scaffold(
-            floatingActionButton = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    FloatingActionButton(
-                        onClick = {},
-                        shape = CircleShape
+        PermissionRequestScreen {
+            val viewModel: ContactsListViewModel = hiltViewModel()
+            var searchQuery = viewModel.searchQuery.collectAsStateWithLifecycle()
+            val state = viewModel.state.collectAsStateWithLifecycle()
+            Scaffold(
+                floatingActionButton = {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.animateContentSize()
                     ) {
-                        Icon(imageVector = Icons.Outlined.AddCircle, contentDescription = "Add contact")
-                    }
-//                  TODO()  share selected contact
-                    AnimatedVisibility(false) {
                         FloatingActionButton(
                             onClick = {},
                             shape = CircleShape
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.Share,
-                                contentDescription = "Share contact"
+                                imageVector = Icons.Outlined.AddCircle,
+                                contentDescription = "Add contact"
                             )
                         }
-                    }
-                }
-            },
-            topBar = {
-                LargeTopAppBar(
-                    title = {
-                        Column(
-                            modifier = Modifier
-                                .animateContentSize()
-                        ) {
-                            if (isCollapsed) {
-
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "Contacts",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    )
-                                    Text(
-                                        text = "${numberOfContacts.intValue} Contacts",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                            } else {
-                                Column {
-                                    Text(
-                                        text = "Contacts",
-                                        style = MaterialTheme.typography.titleLarge
-                                    )
-                                    Text(
-                                        text = "${numberOfContacts.intValue} Contacts",
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
+//                  TODO()  share selected contact
+                        AnimatedVisibility(false) {
+                            FloatingActionButton(
+                                onClick = {},
+                                shape = CircleShape
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Share,
+                                    contentDescription = "Share contact"
+                                )
                             }
                         }
-                    },
-                    scrollBehavior = scrollBehavior,
-                    actions = {
-                        IconButton(onClick = {}) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search Contact"
-                            )
-                        }
-
-                        IconButton(onClick = {}) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Settings"
-                            )
-                        }
-                    },
-                )
-            }
-        ) { innerPaddings ->
-
-            PermissionRequestScreen {
-                val viewModel: ContactsListViewModel = hiltViewModel()
-                val state = viewModel.state.collectAsStateWithLifecycle()
+                    }
+                },
+                topBar = {
+                    SearchableLargeTopAppBar(
+                        numberOfContacts = numberOfContacts.intValue,
+                        scrollBehavior = scrollBehavior,
+                        searchScrollBehavior = searchScrollBehavior,
+                        isCollapsed = isCollapsed,
+                        searchQuery = searchQuery.value,
+                        isSearchActive = state.value.isSearchActive,
+                        onSearchQueryChange = { newQuery ->
+                            viewModel.updateSearchQuery(newQuery)
+                        },
+                        onSearchClick = {
+                            viewModel.updateSearchState(true)
+                        },
+                        onSearchDismiss = {
+                            viewModel.updateSearchState(false)
+                            viewModel.updateSearchQuery("")
+                        },
+                        onSettingsClick = {},
+                    )
+                }
+            ) { innerPaddings ->
                 numberOfContacts.intValue = state.value.contacts.size
                 AnimatedVisibility(state.value.isLoading) {
                     Box(
@@ -160,13 +128,14 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
                     groupedContacts = state.value.groupedContacts,
                     modifier = Modifier
                         .padding(innerPaddings)
-                        .nestedScroll(scrollBehavior.nestedScrollConnection),
-                    onClickContact = {contact->
+                        .nestedScroll(if (state.value.isSearchActive) searchScrollBehavior.nestedScrollConnection else scrollBehavior.nestedScrollConnection),
+                    onClickContact = { contact ->
                         navigator.navigate(ContactDetailsScreenDestination(contact = contact))
                     }
                 )
             }
         }
+
     }
 }
 
@@ -189,7 +158,7 @@ fun ContactsList(
             }
 
             items(contactsForInitial) { contact ->
-                ContactItem (contact=contact, onClickContact = onClickContact)
+                ContactItem(contact = contact, onClickContact = onClickContact)
             }
         }
     }
