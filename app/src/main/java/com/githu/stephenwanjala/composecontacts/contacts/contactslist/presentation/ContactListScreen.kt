@@ -1,8 +1,11 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,13 +27,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -55,7 +58,6 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
     val collapsedFraction = scrollBehavior.state.collapsedFraction
     val isCollapsed = collapsedFraction > 0.5f // Threshold to switch layout state
     val numberOfContacts = remember { mutableIntStateOf(0) }
-    LocalContext.current
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -65,7 +67,6 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
             val viewModel: ContactsListViewModel = hiltViewModel()
             var searchQuery = viewModel.searchQuery.collectAsStateWithLifecycle()
             val state = viewModel.state.collectAsStateWithLifecycle()
-            LocalContext.current
             Scaffold(
                 floatingActionButton = {
                     Column(
@@ -120,26 +121,17 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
                 }
             ) { innerPaddings ->
                 numberOfContacts.intValue = state.value.contacts.size
-                AnimatedVisibility(state.value.isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPaddings),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
                 ContactsList(
-                    groupedContacts = state.value.groupedContacts,
                     modifier = Modifier
                         .padding(innerPaddings)
                         .nestedScroll(if (state.value.isSearchActive) searchScrollBehavior.nestedScrollConnection else scrollBehavior.nestedScrollConnection),
                     onClickContact = { contact ->
                         navigator.navigate(ContactDetailsScreenDestination(contact = contact))
-                    }
+                    },
+                    onRefresh = {
+                        viewModel.onAction(ContactListAction.RefreshContacts)
+                    },
+                    state = state.value
                 )
             }
         }
@@ -153,23 +145,44 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
 fun ContactsList(
     modifier: Modifier = Modifier,
     onClickContact: (Contact) -> Unit,
-    groupedContacts: Map<Char, List<Contact>>
-
+    onRefresh: () -> Unit,
+    state: ContactsListState
 
 ) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize()
+    val pullToRefreshState = rememberPullToRefreshState()
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.background),
+        contentAlignment = androidx.compose.ui.Alignment.Center
     ) {
-        groupedContacts.forEach { (initial, contactsForInitial) ->
-            stickyHeader {
-                CharacterHeader(initial)
-            }
+        AnimatedVisibility(state.isLoading) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
 
-            items(contactsForInitial) { contact ->
-                ContactItem(contact = contact, onClickContact = onClickContact)
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            state = pullToRefreshState, onRefresh = onRefresh
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                state.groupedContacts.forEach { (initial, contactsForInitial) ->
+                    stickyHeader {
+                        CharacterHeader(initial)
+                    }
+
+                    items(contactsForInitial) { contact ->
+                        ContactItem(contact = contact, onClickContact = onClickContact)
+                    }
+                }
             }
         }
     }
+
+
 }
 
 @Composable

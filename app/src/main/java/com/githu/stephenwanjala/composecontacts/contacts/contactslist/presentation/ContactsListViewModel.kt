@@ -50,6 +50,40 @@ class ContactsListViewModel @Inject constructor(
         _searchQuery.value = query
     }
 
+    fun onAction(action: ContactListAction) {
+        when (action) {
+            is ContactListAction.RefreshContacts -> {
+                refreshContacts()
+            }
+        }
+    }
+
+    private fun refreshContacts() {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true, isRefreshing = true) }
+            try {
+                val contacts = dataSource.getContacts()
+                _state.update {
+                    it.copy(
+                        contacts = contacts,
+                        isLoading = false,
+                        groupedContacts = contacts.groupBy { it.name.first().uppercaseChar() },
+                        isRefreshing = false
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to load contacts: ${e.localizedMessage}",
+                        isRefreshing = false
+                    )
+                }
+            }
+        }
+    }
+
     private fun loadContacts() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
@@ -84,5 +118,10 @@ data class ContactsListState(
     val isLoading: Boolean = false,
     val error: String = "",
     val groupedContacts: Map<Char, List<Contact>> = emptyMap(),
-    val isSearchActive: Boolean = false
+    val isSearchActive: Boolean = false,
+    val isRefreshing: Boolean = false
 )
+
+sealed interface ContactListAction {
+    data object RefreshContacts : ContactListAction
+}
