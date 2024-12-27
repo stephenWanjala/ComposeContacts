@@ -30,12 +30,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.ContactItem
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.SearchableLargeTopAppBar
+import com.githu.stephenwanjala.composecontacts.contacts.destinations.AddNewContactScreenDestination
 import com.githu.stephenwanjala.composecontacts.contacts.destinations.ContactDetailsScreenDestination
 import com.githu.stephenwanjala.composecontacts.core.presenation.components.PermissionRequestScreen
 import com.ramcosta.composedestinations.annotation.Destination
@@ -53,6 +55,7 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
     val collapsedFraction = scrollBehavior.state.collapsedFraction
     val isCollapsed = collapsedFraction > 0.5f // Threshold to switch layout state
     val numberOfContacts = remember { mutableIntStateOf(0) }
+    LocalContext.current
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -62,6 +65,7 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
             val viewModel: ContactsListViewModel = hiltViewModel()
             var searchQuery = viewModel.searchQuery.collectAsStateWithLifecycle()
             val state = viewModel.state.collectAsStateWithLifecycle()
+            LocalContext.current
             Scaffold(
                 floatingActionButton = {
                     Column(
@@ -69,7 +73,9 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
                         modifier = Modifier.animateContentSize()
                     ) {
                         FloatingActionButton(
-                            onClick = {},
+                            onClick = {
+                                navigator.navigate(AddNewContactScreenDestination)
+                            },
                             shape = CircleShape
                         ) {
                             Icon(
@@ -121,7 +127,9 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
                             .padding(innerPaddings),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
                 ContactsList(
