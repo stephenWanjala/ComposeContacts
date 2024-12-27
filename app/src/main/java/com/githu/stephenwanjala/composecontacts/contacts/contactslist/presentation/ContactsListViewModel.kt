@@ -5,13 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.data.ContactsDataSource
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,7 +17,7 @@ class ContactsListViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    private val _state: MutableStateFlow<ContactsListState> = MutableStateFlow(ContactsListState())
+    private val _state = MutableStateFlow(ContactsListState())
     val state = combine(_state, _searchQuery) { state, query ->
         if (query.isEmpty()) {
             state
@@ -52,64 +46,43 @@ class ContactsListViewModel @Inject constructor(
 
     fun onAction(action: ContactListAction) {
         when (action) {
-            is ContactListAction.RefreshContacts -> {
-                refreshContacts()
-            }
+            ContactListAction.RefreshContacts -> refreshContacts()
         }
     }
 
-    private fun refreshContacts() {
+    private fun refreshContacts() = updateContacts(isRefreshing = true)
+
+    private fun loadContacts() = updateContacts()
+
+    private fun updateContacts(isRefreshing: Boolean = false) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, isRefreshing = true) }
-            try {
-                val contacts = dataSource.getContacts()
-                _state.update {
-                    it.copy(
-                        contacts = contacts,
-                        isLoading = false,
-                        groupedContacts = contacts.groupBy { it.name.first().uppercaseChar() },
-                        isRefreshing = false
-                    )
+            _state.update { it.copy(isLoading = !isRefreshing, isRefreshing = isRefreshing) }
+            runCatching { dataSource.getContacts() }
+                .onSuccess { contacts ->
+                    _state.update {
+                        it.copy(
+                            contacts = contacts,
+                            isLoading = false,
+                            groupedContacts = contacts.groupBy { it.name.first().uppercaseChar() },
+                            isRefreshing = false,
+                            error = ""
+                        )
+                    }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        error = "Failed to load contacts: ${e.localizedMessage}",
-                        isRefreshing = false
-                    )
+                .onFailure { exception ->
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            isRefreshing = false,
+                            error = "Failed to load contacts: ${exception.localizedMessage}"
+                        )
+                    }
                 }
-            }
         }
     }
 
-    private fun loadContacts() {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            try {
-                val contacts = dataSource.getContacts()
-                _state.update {
-                    it.copy(
-                        contacts = contacts,
-                        isLoading = false,
-                        groupedContacts = contacts.groupBy { it.name.first().uppercaseChar() }
-                    )
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        error = "Failed to load contacts: ${e.localizedMessage}"
-                    )
-                }
-            }
-        }
-    }
-
-    fun updateSearchState(bool: Boolean) {
-        _state.update { it.copy(isSearchActive = bool) }
+    fun updateSearchState(isActive: Boolean) {
+        _state.update { it.copy(isSearchActive = isActive) }
     }
 }
 
