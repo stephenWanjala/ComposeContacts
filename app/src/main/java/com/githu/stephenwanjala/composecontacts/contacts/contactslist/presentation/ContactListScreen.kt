@@ -32,6 +32,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
@@ -65,7 +66,7 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
     ) {
         PermissionRequestScreen {
             val viewModel: ContactsListViewModel = hiltViewModel()
-            var searchQuery = viewModel.searchQuery.collectAsStateWithLifecycle()
+            val searchQuery = viewModel.searchQuery.collectAsStateWithLifecycle()
             val state = viewModel.state.collectAsStateWithLifecycle()
             Scaffold(
                 floatingActionButton = {
@@ -166,16 +167,21 @@ fun ContactsList(
             isRefreshing = state.isRefreshing,
             state = pullToRefreshState, onRefresh = onRefresh
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                state.groupedContacts.forEach { (initial, contactsForInitial) ->
-                    stickyHeader {
-                        CharacterHeader(initial)
-                    }
+            if(state.groupedContacts.isEmpty() && !state.isLoading){
+                Text(text = "No Contacts Available On Device",
+                    modifier = Modifier.align(Alignment.Center))
+            } else{
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    state.groupedContacts.forEach { (initial, contactsForInitial) ->
+                        stickyHeader {
+                            CharacterHeader(initial)
+                        }
 
-                    items(contactsForInitial) { contact ->
-                        ContactItem(contact = contact, onClickContact = onClickContact)
+                        items(contactsForInitial) { contact ->
+                            ContactItem(contact = contact, onClickContact = onClickContact)
+                        }
                     }
                 }
             }
