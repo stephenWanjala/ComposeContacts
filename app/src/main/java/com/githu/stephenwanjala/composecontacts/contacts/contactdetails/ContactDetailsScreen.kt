@@ -33,7 +33,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,17 +41,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
+import com.githu.stephenwanjala.composecontacts.Screen
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
-import com.githu.stephenwanjala.composecontacts.contacts.destinations.QRCodeDialogDestination
-import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Destination
 @Composable
 fun ContactDetailsScreen(
-    navigator: DestinationsNavigator,
+    navController: NavHostController,
     contact: Contact
 ) {
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -65,7 +62,7 @@ fun ContactDetailsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = navigator::navigateUp) {
+                    IconButton(onClick = navController::navigateUp) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.ArrowBack,
                             contentDescription = "Back"
@@ -99,7 +96,13 @@ fun ContactDetailsScreen(
             ) {
                 ProfileHeader(contact = contact,
                     showQRCodeDialog = {
-                        navigator.navigate(QRCodeDialogDestination(contact=contact))
+                        navController.navigate(Screen.QRCodeDialogDestination(
+                            id = contact.id,
+                            email = contact.email,
+                            photoUri = contact.photoUri,
+                            phoneNumbers = contact.phoneNumbers,
+                            name = contact.name
+                        ))
                     })
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -112,7 +115,7 @@ fun ContactDetailsScreen(
 }
 
 @Composable
-fun ProfileHeader(contact: Contact,showQRCodeDialog:()-> Unit) {
+fun ProfileHeader(contact: Contact, showQRCodeDialog: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -157,7 +160,8 @@ fun ProfileHeader(contact: Contact,showQRCodeDialog:()-> Unit) {
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(8.dp)
         )
         Spacer(modifier = Modifier.height(4.dp))

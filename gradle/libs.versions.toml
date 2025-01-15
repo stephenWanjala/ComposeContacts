@@ -3,15 +3,14 @@ agp = "8.7.3"
 appcompat = "1.7.0"
 coilCompose = "3.0.4"
 coreVersion = "3.5.3"
-destinationsVersion = "1.11.7"
 coreSplashscreen = "1.0.1"
 datastorePreferences = "1.1.1"
-kotlin = "2.0.21"
-ksp="2.0.21-1.0.27"
+kotlin = "2.1.0"
+ksp="2.1.0-1.0.29"
 coreKtx = "1.15.0"
 junit = "4.13.2"
-desugar-jdk-libs = "2.1.3"
-hiltCompiler = "2.52"
+desugar-jdk-libs = "2.1.4"
+hiltCompiler = "2.53.1"
 hiltNavigationCompose = "1.2.0"
 ktor = "3.0.0"
 compose-material-icons-extended = "1.7.6"
@@ -21,7 +20,7 @@ lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.9.3"
 composeBom = "2024.12.01"
 navigationCompose = "2.8.5"
-accompanist="0.36.0"
+accompanist="0.37.0"
 
 [libraries]
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -30,8 +29,6 @@ androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", versi
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
-destinations-core = { module = "io.github.raamcosta.compose-destinations:core", version.ref = "destinationsVersion" }
-destinations-animations-core = { module = "io.github.raamcosta.compose-destinations:animations-core", version.ref = "destinationsVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -46,12 +43,7 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
-destinations-ksp = { module = "io.github.raamcosta.compose-destinations:ksp", version.ref = "destinationsVersion" }
-ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
-ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
-ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
-ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
-ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+kotlin-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "compose-material-icons-extended" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
@@ -87,12 +79,9 @@ compose-debug = [
     "androidx-ui-test-manifest",
 ]
 
-ktor = [
-    "ktor-client-cio",
-    "ktor-client-content-negotiation",
-    "ktor-client-core",
-    "ktor-client-logging",
-    "ktor-serialization-kotlinx-json"
+serialization = [
+
+    "kotlin-serialization-kotlinx-json"
 ]
 hilt = [
     "hilt-android",
