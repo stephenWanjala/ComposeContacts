@@ -7,11 +7,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.githu.stephenwanjala.composecontacts.contacts.NavGraphs
+import androidx.navigation.compose.rememberNavController
 import com.githu.stephenwanjala.composecontacts.ui.theme.ComposeContactsTheme
-import com.ramcosta.composedestinations.DestinationsNavHost
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -21,14 +22,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ComposeContactsTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    DestinationsNavHost(
-                        NavGraphs.root,
-                        modifier = Modifier
-                            .padding(innerPadding)
-                            .consumeWindowInsets(innerPadding)
-                    )
-                }
+                val navHostController = rememberNavController()
+               Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
+                   ComposeContactsNav(
+                       navHostController = navHostController,
+                   )
+               }
             }
         }
     }

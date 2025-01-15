@@ -63,12 +63,10 @@ dependencies {
 
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.core.splashscreen)
-    implementation(libs.destinations.core)
-    implementation(libs.destinations.animations.core)
-    ksp(libs.destinations.ksp)
 
     implementation(libs.accompanist.permissions)
     implementation(libs.zxing.core)
+    implementation(libs.bundles.serialization)
 
     testImplementation(libs.junit)
 

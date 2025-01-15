@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -38,22 +39,17 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import com.githu.stephenwanjala.composecontacts.Screen
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.ContactItem
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.SearchableLargeTopAppBar
-import com.githu.stephenwanjala.composecontacts.contacts.destinations.AddNewContactScreenDestination
-import com.githu.stephenwanjala.composecontacts.contacts.destinations.ContactDetailsScreenDestination
 import com.githu.stephenwanjala.composecontacts.core.presenation.components.PermissionRequestScreen
-import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.annotation.RootNavGraph
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RootNavGraph(start = true)
-@Destination
 @Composable
-fun ContactListScreen(navigator: DestinationsNavigator) {
+fun ContactListScreen(navHostController: NavHostController) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val searchScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val collapsedFraction = scrollBehavior.state.collapsedFraction
@@ -76,7 +72,7 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
                     ) {
                         FloatingActionButton(
                             onClick = {
-                                navigator.navigate(AddNewContactScreenDestination)
+                                navHostController.navigate(Screen.AddNewContactDestination)
                             },
                             shape = CircleShape
                         ) {
@@ -125,9 +121,18 @@ fun ContactListScreen(navigator: DestinationsNavigator) {
                 ContactsList(
                     modifier = Modifier
                         .padding(innerPaddings)
+                        .consumeWindowInsets(innerPaddings)
                         .nestedScroll(if (state.value.isSearchActive) searchScrollBehavior.nestedScrollConnection else scrollBehavior.nestedScrollConnection),
                     onClickContact = { contact ->
-                        navigator.navigate(ContactDetailsScreenDestination(contact = contact))
+                        navHostController.navigate(
+                            Screen.ContactDetailsDestination(
+                                id = contact.id,
+                                name = contact.name,
+                                phoneNumbers = contact.phoneNumbers,
+                                photoUri = contact.photoUri,
+                                email = contact.email
+                            )
+                        )
                     },
                     onRefresh = {
                         viewModel.onAction(ContactListAction.RefreshContacts)
@@ -155,7 +160,7 @@ fun ContactsList(
         modifier = modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background),
-        contentAlignment = androidx.compose.ui.Alignment.Center
+        contentAlignment = Alignment.Center
     ) {
         AnimatedVisibility(state.isLoading) {
             CircularProgressIndicator(
@@ -167,10 +172,12 @@ fun ContactsList(
             isRefreshing = state.isRefreshing,
             state = pullToRefreshState, onRefresh = onRefresh
         ) {
-            if(state.groupedContacts.isEmpty() && !state.isLoading){
-                Text(text = "No Contacts Available On Device",
-                    modifier = Modifier.align(Alignment.Center))
-            } else{
+            if (state.groupedContacts.isEmpty() && !state.isLoading) {
+                Text(
+                    text = "No Contacts Available On Device",
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
