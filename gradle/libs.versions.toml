@@ -5,6 +5,7 @@ coilCompose = "3.0.4"
 coreVersion = "3.5.3"
 coreSplashscreen = "1.0.1"
 datastorePreferences = "1.1.1"
+material3-adaptive="1.1.0-alpha08"
 kotlin = "2.1.0"
 ksp="2.1.0-1.0.29"
 coreKtx = "1.15.0"
@@ -51,6 +52,8 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltC
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltCompiler" }
 hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 accompanist-permissions= {module="com.google.accompanist:accompanist-permissions",version.ref='accompanist'}
+androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite" }
+androidx-compose-material3-adaptive-navigation = { module = "androidx.compose.material3.adaptive:adaptive-navigation", version.ref = "material3-adaptive" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "coreVersion" }
 
 [plugins]
@@ -72,7 +75,9 @@ compose = [
     "androidx-ui-graphics",
     "androidx-ui-tooling-preview",
     "compose-material-icons-extended",
-    "androidx-navigation-compose"
+    "androidx-navigation-compose",
+    "androidx-material3-adaptive-navigation-suite",
+    "androidx-compose-material3-adaptive-navigation",
 ]
 compose-debug = [
     "androidx-ui-tooling",
