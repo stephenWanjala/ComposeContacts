@@ -1,6 +1,9 @@
 package com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components
 
 import android.graphics.BlurMaskFilter
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,49 +25,64 @@ import coil3.compose.AsyncImage
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import com.githu.stephenwanjala.composecontacts.ui.theme.ComposeContactsTheme
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ContactItem(
     contact: Contact,
     modifier: Modifier = Modifier,
-    onClickContact: (Contact) -> Unit
+    onClickContact: (Contact) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = { onClickContact(contact) })
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            modifier = Modifier.size(40.dp),
-            shape = MaterialTheme.shapes.small,
-            color = MaterialTheme.colorScheme.primary
+    with(sharedTransitionScope) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .clickable(onClick = { onClickContact(contact) })
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (contact.photoUri != null) {
-                AsyncImage(
-                    model = contact.photoUri,
-                    contentDescription = null,
-                )
-            } else {
-                Text(
-                    text = contact.name.first().toString().uppercase(),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .wrapContentSize(Alignment.Center),
-                    textAlign = TextAlign.Center
-                )
+            Surface(
+                modifier = Modifier
+                    .size(40.dp)
+                    .sharedElement(
+                        rememberSharedContentState(key = "contact-photo-${contact.id}"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ),
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.primary
+            ) {
+                if (contact.photoUri != null) {
+                    AsyncImage(
+                        model = contact.photoUri,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Text(
+                        text = contact.name.first().toString().uppercase(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .wrapContentSize(Alignment.Center),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(
-                text = contact.name,
-                style = MaterialTheme.typography.bodyLarge
-            )
-            if (contact.phoneNumbers.isNotEmpty()) {
-                BlurredPhoneNumber(contact)
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = contact.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.sharedBounds(
+                        rememberSharedContentState(key = "contact-name-${contact.id}"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    )
+                )
+                if (contact.phoneNumbers.isNotEmpty()) {
+                    BlurredPhoneNumber(contact)
+                }
             }
         }
     }
@@ -133,17 +151,25 @@ fun BlurredPhoneNumber(contact: Contact) {
         }
     }
 }
-
-
-
-
-
+/*
 
 @Preview(showBackground = true)
 @PreviewLightDark
 @Composable
 private fun ContactItemPreview() {
     ComposeContactsTheme {
+        // Dummy values for sharedTransitionScope and animatedVisibilityScope for preview
+        // In a real app, these would be provided by SharedTransitionLayout and NavHost
+        val dummySharedTransitionScope = @Suppress("RemoveExplicitTypeArguments") object : SharedTransitionScope {
+            override val is(sharedContentState: SharedContentState): Boolean = false
+            override fun rememberSharedContentState(key: Any): SharedContentState = SharedContentState(key)
+        }
+        val dummyAnimatedVisibilityScope = @Suppress("RemoveExplicitTypeArguments") object : AnimatedVisibilityScope {
+            override fun Modifier.animateEnterExit(enter: EnterTransition, exit: ExitTransition, label: String): Modifier = this
+            override val transition: Transition<Boolean> = Transition(MutableTransitionState(true), label = "dummy")
+        }
+
+
         ContactItem(
             contact = Contact(
                 id = "1",
@@ -153,6 +179,9 @@ private fun ContactItemPreview() {
                 photoUri = ""
             ),
             onClickContact = { },
+            sharedTransitionScope = dummySharedTransitionScope,
+            animatedVisibilityScope = dummyAnimatedVisibilityScope
         )
     }
 }
+ */

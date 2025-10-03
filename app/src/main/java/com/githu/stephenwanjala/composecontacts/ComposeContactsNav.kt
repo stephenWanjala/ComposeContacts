@@ -1,5 +1,7 @@
 package com.githu.stephenwanjala.composecontacts
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -13,51 +15,70 @@ import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.mod
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.ContactListScreen
 import kotlinx.serialization.Serializable
 
-
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalSharedTransitionApi::class) // Add this annotation
 @Composable
 fun ComposeContactsNav(
     navHostController: NavHostController,
-    modifier: Modifier = Modifier) {
-    NavHost(navController = navHostController, startDestination = Screen.ContactListDestination,
-        modifier = modifier) {
-        composable<Screen.ContactListDestination> {
-            ContactListScreen(navHostController = navHostController)
-        }
-        composable<Screen.AddNewContactDestination> {
-            AddNewContactScreen(navigator = navHostController)
-        }
-        composable<Screen.ContactDetailsDestination> {
-            val route = it.toRoute<Screen.ContactDetailsDestination>()
-            val contact = Contact(
-                id = route.id,
-                email = route.email,
-                phoneNumbers = route.phoneNumbers,
-                photoUri = route.photoUri,
-                name = route.name
-            )
-            ContactDetailsScreen(contact = contact, navController = navHostController)
-        }
-        composable<Screen.QRCodeDialogDestination> {
-            val route = it.toRoute<Screen.QRCodeDialogDestination>()
-            val contact = Contact(
-                id = route.id,
-                email = route.email,
-                phoneNumbers = route.phoneNumbers,
-                photoUri = route.photoUri,
-                name = route.name
-            )
-            QRCodeDialog(navController = navHostController, contact = contact)
+    modifier: Modifier = Modifier
+) {
+    SharedTransitionLayout(modifier = modifier) {
+        NavHost(
+            navController = navHostController,
+            startDestination = Screen.ContactListDestination
+        ) {
+            composable<Screen.ContactListDestination> {
+                ContactListScreen(
+                    navHostController = navHostController,
+                    sharedTransitionScope = this@SharedTransitionLayout,
+                    animatedVisibilityScope = this
+                )
+            }
+            composable<Screen.AddNewContactDestination> {
+                AddNewContactScreen(navigator = navHostController)
+            }
+            composable<Screen.ContactDetailsDestination> {
+                val route = it.toRoute<Screen.ContactDetailsDestination>()
+                val contact = Contact(
+                    id = route.id,
+                    email = route.email,
+                    phoneNumbers = route.phoneNumbers,
+                    photoUri = route.photoUri,
+                    name = route.name
+                )
+                ContactDetailsScreen(
+                    contact = contact,
+                    navController = navHostController,
+                    sharedTransitionScope = this@SharedTransitionLayout, // Pass the scope
+                    animatedVisibilityScope = this // Pass AnimatedVisibilityScope
+                )
+            }
+            composable<Screen.QRCodeDialogDestination> {
+                val route = it.toRoute<Screen.QRCodeDialogDestination>()
+                val contact = Contact(
+                    id = route.id,
+                    email = route.email,
+                    phoneNumbers = route.phoneNumbers,
+                    photoUri = route.photoUri,
+                    name = route.name
+                )
+                QRCodeDialog(
+                    navController = navHostController, contact = contact,
+                    sharedTransitionScope = this@SharedTransitionLayout,
+                    animatedVisibilityScope = this
+                )
+            }
         }
     }
-
 }
 
 @Serializable
-sealed interface Screen{
+sealed interface Screen {
     @Serializable
-    data object ContactListDestination:Screen
+    data object ContactListDestination : Screen
+
     @Serializable
-    data object AddNewContactDestination:Screen
+    data object AddNewContactDestination : Screen
+
     @Serializable
     data class ContactDetailsDestination(
         val id: String,
@@ -65,7 +86,8 @@ sealed interface Screen{
         val phoneNumbers: List<String>,
         var email: String?,
         var photoUri: String?
-    ):Screen
+    ) : Screen
+
     @Serializable
     data class QRCodeDialogDestination(
         val id: String,
@@ -73,6 +95,6 @@ sealed interface Screen{
         val phoneNumbers: List<String>,
         var email: String?,
         var photoUri: String?
-    ):Screen
+    ) : Screen
 
 }

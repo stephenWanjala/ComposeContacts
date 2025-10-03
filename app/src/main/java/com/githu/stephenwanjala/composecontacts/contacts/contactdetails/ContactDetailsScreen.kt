@@ -1,7 +1,12 @@
+@file:OptIn(ExperimentalSharedTransitionApi::class)
+
 package com.githu.stephenwanjala.composecontacts.contacts.contactdetails
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,12 +50,15 @@ import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.githu.stephenwanjala.composecontacts.Screen
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactDetailsScreen(
     navController: NavHostController,
-    contact: Contact
+    contact: Contact,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
 ) {
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Scaffold(topBar = {
@@ -94,19 +102,24 @@ fun ContactDetailsScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                ProfileHeader(contact = contact,
+                ProfileHeader(
+                    contact = contact,
                     showQRCodeDialog = {
-                        navController.navigate(Screen.QRCodeDialogDestination(
-                            id = contact.id,
-                            email = contact.email,
-                            photoUri = contact.photoUri,
-                            phoneNumbers = contact.phoneNumbers,
-                            name = contact.name
-                        ))
-                    })
+                        navController.navigate(
+                            Screen.QRCodeDialogDestination(
+                                id = contact.id,
+                                email = contact.email,
+                                phoneNumbers = contact.phoneNumbers,
+                                photoUri = contact.photoUri,
+                                name = contact.name
+                            )
+                        )
+                    },
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = animatedVisibilityScope
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
-
 
                 ContactDetailsSection(contact = contact)
             }
@@ -115,62 +128,81 @@ fun ContactDetailsScreen(
 }
 
 @Composable
-fun ProfileHeader(contact: Contact, showQRCodeDialog: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surfaceVariant
-                    )
-                )
-            )
-    ) {
-        if (contact.photoUri != null) {
-            AsyncImage(
-                model = contact.photoUri,
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop,
-                contentDescription = "${contact.name} Contact Image"
-            )
-        } else {
-            Surface(
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape),
-                color = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Person,
-                    contentDescription = "Contact Image",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
+fun ProfileHeader(
+    contact: Contact,
+    showQRCodeDialog: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
+) {
 
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = contact.name,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center,
+    with(sharedTransitionScope) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        IconButton(onClick = {
-            showQRCodeDialog()
-        }) {
-            Icon(imageVector = Icons.Default.QrCode, contentDescription = "Contact QR Code")
-        }
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background,
+                            MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    )
+                )
+        ) {
+            if (contact.photoUri != null) {
+                AsyncImage(
+                    model = contact.photoUri,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .sharedElement(
+                            rememberSharedContentState(key = "contact-photo-${contact.id}"),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        ),
+                    contentScale = ContentScale.Crop,
+                    contentDescription = "${contact.name} Contact Image"
+                )
+            } else {
+                Surface(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .sharedElement(
+                            rememberSharedContentState(key = "contact-photo-${contact.id}"),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        ),
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Person,
+                        contentDescription = "Contact Image",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
 
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = contact.name,
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .sharedBounds(
+                        rememberSharedContentState(key = "contact-name-${contact.id}"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    )
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            IconButton(onClick = {
+                showQRCodeDialog()
+            }) {
+                Icon(imageVector = Icons.Default.QrCode, contentDescription = "Contact QR Code")
+            }
+        }
     }
 }
 
@@ -222,7 +254,7 @@ fun ContactDetailsSection(contact: Contact) {
                     .fillMaxWidth()
                     .clickable {
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
-                            data = Uri.parse("mailto:${contact.email}")
+                            data = "mailto:${contact.email}".toUri()
                         }
                         context.startActivity(intent)
                     },

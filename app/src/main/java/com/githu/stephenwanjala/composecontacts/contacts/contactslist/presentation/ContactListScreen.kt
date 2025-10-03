@@ -3,31 +3,20 @@
 package com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -47,9 +36,13 @@ import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentati
 import com.githu.stephenwanjala.composecontacts.core.presenation.components.PermissionRequestScreen
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun ContactListScreen(navHostController: NavHostController) {
+fun ContactListScreen(
+    navHostController: NavHostController,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
+) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val searchScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val collapsedFraction = scrollBehavior.state.collapsedFraction
@@ -137,7 +130,9 @@ fun ContactListScreen(navHostController: NavHostController) {
                     onRefresh = {
                         viewModel.onAction(ContactListAction.RefreshContacts)
                     },
-                    state = state.value
+                    state = state.value,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = animatedVisibilityScope
                 )
             }
         }
@@ -146,13 +141,16 @@ fun ContactListScreen(navHostController: NavHostController) {
 }
 
 
+@ExperimentalSharedTransitionApi
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ContactsList(
     modifier: Modifier = Modifier,
     onClickContact: (Contact) -> Unit,
     onRefresh: () -> Unit,
-    state: ContactsListState
+    state: ContactsListState,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
 
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
@@ -187,7 +185,9 @@ fun ContactsList(
                         }
 
                         items(contactsForInitial) { contact ->
-                            ContactItem(contact = contact, onClickContact = onClickContact)
+                            ContactItem(contact = contact, onClickContact = onClickContact,
+                                sharedTransitionScope = sharedTransitionScope,
+                                animatedVisibilityScope = animatedVisibilityScope)
                         }
                     }
                 }

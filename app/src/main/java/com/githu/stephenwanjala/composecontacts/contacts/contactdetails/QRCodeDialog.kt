@@ -1,5 +1,8 @@
 package com.githu.stephenwanjala.composecontacts.contacts.contactdetails
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,11 +30,13 @@ import androidx.navigation.NavHostController
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import com.githu.stephenwanjala.composecontacts.contacts.utils.generateQRCode
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun QRCodeDialog(
     navController: NavHostController,
-    contact: Contact
+    contact: Contact,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
 ) {
     val qrData = """
         BEGIN:VCARD
@@ -46,7 +51,15 @@ fun QRCodeDialog(
 
     Scaffold(topBar = {
         TopAppBar(title = {
-            Text(text = contact.name)
+            with(sharedTransitionScope) {
+                Text(
+                    text = contact.name,
+                    modifier = Modifier.sharedBounds(
+                        rememberSharedContentState(key = "contact-name-${contact.id}"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    )
+                )
+            }
         }, navigationIcon = {
             IconButton(onClick = navController::navigateUp) {
                 Icon(
@@ -79,5 +92,4 @@ fun QRCodeDialog(
             )
         }
     }
-
 }
