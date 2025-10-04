@@ -1,12 +1,6 @@
 package com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,19 +12,15 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -110,8 +100,7 @@ fun SearchTopAppBar(
         }
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun SearchableLargeTopAppBar(
     numberOfContacts: Int,
@@ -126,86 +115,106 @@ fun SearchableLargeTopAppBar(
     searchScrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
     AnimatedContent(
-        targetState = isSearchActive, transitionSpec = {
+        targetState = isSearchActive,
+        transitionSpec = {
             fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
-        }, label = "SearchableLargeTopAppBarTransition"
+        },
+        label = "SearchableLargeTopAppBarTransition"
     ) { searchActive ->
         if (searchActive) {
-            TopAppBar(title = {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = onSearchQueryChange,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(end = 8.dp),
-                    placeholder = { Text("Search Contacts...") },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Transparent,
-                    ),
-                    textStyle = MaterialTheme.typography.bodyLarge
-                )
-            }, navigationIcon = {
-                IconButton(onClick = onSearchDismiss) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                        contentDescription = "Close search"
+
+            val focusRequester = remember { FocusRequester() }
+
+
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+            }
+
+            TopAppBar(
+                title = {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = onSearchQueryChange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 8.dp)
+                            .focusRequester(focusRequester),
+                        placeholder = { Text("Search Contacts...") },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = Color.Transparent,
+                        ),
+                        textStyle = MaterialTheme.typography.bodyLarge
                     )
-                }
-            }, actions = {
-                if (searchQuery.isNotEmpty()) {
-                    IconButton(onClick = { onSearchQueryChange("") }) {
+                },
+                navigationIcon = {
+                    IconButton(onClick = onSearchDismiss) {
                         Icon(
-                            imageVector = Icons.Outlined.Clear,
-                            contentDescription = "Clear search"
+                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                            contentDescription = "Close search"
                         )
                     }
-                }
-            }, scrollBehavior = searchScrollBehavior
-            )
-        } else {
-            LargeTopAppBar(title = {
-                Column(
-                    modifier = Modifier.animateContentSize()
-                ) {
-                    if (isCollapsed) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Contacts",
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
-                            Text(
-                                text = "$numberOfContacts Contacts",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    } else {
-                        Column {
-                            Text(
-                                text = "Contacts", style = MaterialTheme.typography.titleLarge
-                            )
-                            Text(
-                                text = "$numberOfContacts Contacts",
-                                style = MaterialTheme.typography.labelSmall
+                },
+                actions = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { onSearchQueryChange("") }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Clear,
+                                contentDescription = "Clear search"
                             )
                         }
                     }
-                }
-            }, actions = {
-                IconButton(onClick = onSearchClick) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search Contact"
-                    )
-                }
-                IconButton(onClick = onSettingsClick) {
-                    Icon(
-                        imageVector = Icons.Default.Settings, contentDescription = "Settings"
-                    )
-                }
-            }, scrollBehavior = scrollBehavior
+                },
+                scrollBehavior = searchScrollBehavior
+            )
+        } else {
+            LargeTopAppBar(
+                title = {
+                    Column(
+                        modifier = Modifier.animateContentSize()
+                    ) {
+                        if (isCollapsed) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Contacts",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(
+                                    text = "$numberOfContacts Contacts",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        } else {
+                            Column {
+                                Text(
+                                    text = "Contacts",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                                Text(
+                                    text = "$numberOfContacts Contacts",
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+                        }
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onSearchClick) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search Contact"
+                        )
+                    }
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings"
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior
             )
         }
     }
