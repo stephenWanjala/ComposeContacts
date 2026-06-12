@@ -16,17 +16,18 @@ class ContactsListViewModel(
 
     private val _state = MutableStateFlow(ContactsListState())
     val state = combine(_state, _searchQuery) { state, query ->
-        if (query.isEmpty()) {
+        val trimmedQuery = query.trim()
+        if (trimmedQuery.isEmpty()) {
             state
         } else {
             state.copy(
                 groupedContacts = state.contacts
                     .filter { contact ->
-                        contact.name.contains(query, ignoreCase = true) ||
-                                contact.phoneNumbers.any { it.contains(query) } ||
-                                contact.email?.contains(query, ignoreCase = true) == true
+                        contact.name.contains(trimmedQuery, ignoreCase = true) ||
+                                contact.phoneNumbers.any { it.contains(trimmedQuery) } ||
+                                contact.email?.contains(trimmedQuery, ignoreCase = true) == true
                     }
-                    .groupBy { it.name.first().uppercaseChar() }
+                    .groupBy { it.initial }
             )
         }
     }
@@ -60,7 +61,7 @@ class ContactsListViewModel(
                         it.copy(
                             contacts = contacts,
                             isLoading = false,
-                            groupedContacts = contacts.groupBy { it.name.first().uppercaseChar() },
+                            groupedContacts = contacts.groupBy { it.initial },
                             isRefreshing = false,
                             error = ""
                         )

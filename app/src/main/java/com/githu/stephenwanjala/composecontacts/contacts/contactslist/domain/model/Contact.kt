@@ -12,4 +12,11 @@ data class Contact(
     val phoneNumbers: List<String>,
     var email: String?,
     var photoUri: String?
-) : Parcelable
+) : Parcelable {
+    /**
+     * The grouping/avatar initial for this contact. Falls back to '#' for blank
+     * or non-letter leading characters so empty names never crash on `.first()`.
+     */
+    val initial: Char
+        get() = name.trim().firstOrNull()?.takeIf { it.isLetter() }?.uppercaseChar() ?: '#'
+}

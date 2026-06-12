@@ -49,25 +49,45 @@ class AddContactViewModel : ViewModel() {
                 }
             }
 
-            is AddContactAction.SaveContact -> {
-                viewModelScope.launch {
-                    if (_state.value.phoneNumberError == null && _state.value.emailError == null && _state.value.nameError == null) {
-                        _events.send(AddContactEvent.ContactSaved(_state.value.name, _state.value.phoneNumber, _state.value.email))
-                    }
-                }
-            }
+            is AddContactAction.SaveContact -> saveContact()
+        }
+    }
+
+    private fun saveContact() {
+        // Re-validate every field on save so an untouched (still-null) error
+        // can never let an empty/invalid contact through.
+        val current = _state.value
+        val nameError = if (current.name.isNotBlank()) null else "Name cannot be empty"
+        val phoneError = if (isValidPhoneNumber(current.phoneNumber)) null else "Invalid phone number"
+        val emailError = if (isValidEmail(current.email)) null else "Invalid email"
+
+        _state.update {
+            it.copy(nameError = nameError, phoneNumberError = phoneError, emailError = emailError)
+        }
+
+        if (nameError != null || phoneError != null || emailError != null) return
+
+        viewModelScope.launch {
+            _events.send(
+                AddContactEvent.ContactSaved(
+                    name = current.name.trim(),
+                    phoneNumber = current.phoneNumber.trim(),
+                    email = current.email.trim().ifBlank { null }
+                )
+            )
         }
     }
 
     private fun isValidPhoneNumber(phoneNumber: String): Boolean {
-
-        return phoneNumber.length >= 10 && phoneNumber.all { it.isDigit() } && Patterns.PHONE.matcher(
-            phoneNumber
-        ).matches()
+        val trimmed = phoneNumber.trim()
+        // Allow common dialable characters (+, spaces, dashes, parentheses) but
+        // require at least 7 actual digits, which covers international formats.
+        val digitCount = trimmed.count { it.isDigit() }
+        return digitCount >= 7 && Patterns.PHONE.matcher(trimmed).matches()
     }
 
     private fun isValidEmail(email: String): Boolean {
-        return Patterns.EMAIL_ADDRESS.matcher(email).matches() or email.isEmpty()
+        return email.isBlank() || Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
     }
 
 }

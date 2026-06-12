@@ -15,16 +15,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircle
+import androidx.compose.material.icons.outlined.Contacts
+import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -47,7 +49,6 @@ fun ContactListScreen(
     val searchScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val collapsedFraction = scrollBehavior.state.collapsedFraction
     val isCollapsed = collapsedFraction > 0.5f // Threshold to switch layout state
-    val numberOfContacts = remember { mutableIntStateOf(0) }
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -90,7 +91,7 @@ fun ContactListScreen(
                 },
                 topBar = {
                     SearchableLargeTopAppBar(
-                        numberOfContacts = numberOfContacts.intValue,
+                        numberOfContacts = state.value.contacts.size,
                         scrollBehavior = scrollBehavior,
                         searchScrollBehavior = searchScrollBehavior,
                         isCollapsed = isCollapsed,
@@ -110,7 +111,6 @@ fun ContactListScreen(
                     )
                 }
             ) { innerPaddings ->
-                numberOfContacts.intValue = state.value.contacts.size
                 ContactsList(
                     modifier = Modifier
                         .padding(innerPaddings)
@@ -171,20 +171,21 @@ fun ContactsList(
             state = pullToRefreshState, onRefresh = onRefresh
         ) {
             if (state.groupedContacts.isEmpty() && !state.isLoading) {
-                Text(
-                    text = "No Contacts Available On Device",
+                EmptyContactsMessage(
+                    isSearching = state.isSearchActive,
                     modifier = Modifier.align(Alignment.Center)
                 )
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 96.dp)
                 ) {
                     state.groupedContacts.forEach { (initial, contactsForInitial) ->
                         stickyHeader {
                             CharacterHeader(initial)
                         }
 
-                        items(contactsForInitial) { contact ->
+                        items(contactsForInitial, key = { it.id }) { contact ->
                             ContactItem(contact = contact, onClickContact = onClickContact,
                                 sharedTransitionScope = sharedTransitionScope,
                                 animatedVisibilityScope = animatedVisibilityScope)
@@ -199,15 +200,50 @@ fun ContactsList(
 }
 
 @Composable
+fun EmptyContactsMessage(
+    isSearching: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = if (isSearching) Icons.Outlined.SearchOff else Icons.Outlined.Contacts,
+            contentDescription = null,
+            modifier = Modifier.size(56.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = if (isSearching) "No matching contacts" else "No contacts yet",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = if (isSearching)
+                "Try a different name, number or email."
+            else
+                "Tap the + button to add your first contact.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
 fun CharacterHeader(characterData: Char) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant
+        color = MaterialTheme.colorScheme.background
     ) {
         Text(
             text = characterData.toString(),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(start = 16.dp)
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
         )
     }
 }
