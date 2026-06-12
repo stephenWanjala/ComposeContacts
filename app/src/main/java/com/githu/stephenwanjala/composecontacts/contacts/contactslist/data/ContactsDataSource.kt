@@ -7,9 +7,8 @@ import android.util.Log
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
-class ContactsDataSource @Inject constructor(private val contentResolver: ContentResolver) {
+class ContactsDataSource(private val contentResolver: ContentResolver) {
     suspend fun getContacts(): List<Contact> = withContext(Dispatchers.IO) {
         val contacts = mutableListOf<Contact>()
 

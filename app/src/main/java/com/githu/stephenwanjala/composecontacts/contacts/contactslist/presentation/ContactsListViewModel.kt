@@ -4,13 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.data.ContactsDataSource
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class ContactsListViewModel @Inject constructor(
+class ContactsListViewModel(
     private val dataSource: ContactsDataSource
 ) : ViewModel() {
 

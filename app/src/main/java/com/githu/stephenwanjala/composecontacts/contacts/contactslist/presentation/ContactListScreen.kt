@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.githu.stephenwanjala.composecontacts.Screen
@@ -34,6 +33,7 @@ import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.mod
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.ContactItem
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.SearchableLargeTopAppBar
 import com.githu.stephenwanjala.composecontacts.core.presenation.components.PermissionRequestScreen
+import org.koin.androidx.compose.koinViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
@@ -54,7 +54,7 @@ fun ContactListScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         PermissionRequestScreen {
-            val viewModel: ContactsListViewModel = hiltViewModel()
+            val viewModel: ContactsListViewModel = koinViewModel()
             val searchQuery = viewModel.searchQuery.collectAsStateWithLifecycle()
             val state = viewModel.state.collectAsStateWithLifecycle()
             Scaffold(

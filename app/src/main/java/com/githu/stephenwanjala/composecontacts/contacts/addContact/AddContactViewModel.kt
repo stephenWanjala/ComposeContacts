@@ -3,7 +3,6 @@ package com.githu.stephenwanjala.composecontacts.contacts.addContact
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -11,10 +10,8 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class AddContactViewModel @Inject constructor() : ViewModel() {
+class AddContactViewModel : ViewModel() {
 
     private val _state = MutableStateFlow(AddNewContactState())
     val state = _state.stateIn(viewModelScope, SharingStarted.WhileSubscribed(500), _state.value)
