@@ -28,7 +28,10 @@ class ContactsDataSource(private val contentResolver: ContentResolver) {
                 null,
                 "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC"
             )?.use { cursor ->
-                val contactMap = mutableMapOf<String, Contact>()
+                // Use ordered sets for phone numbers so dedup is O(1) instead of
+                // an O(n) contains() scan per row.
+                val numbersByContact = LinkedHashMap<String, LinkedHashSet<String>>()
+                val contactMap = LinkedHashMap<String, Contact>()
 
                 val contactIdIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
                 val nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
@@ -42,49 +45,48 @@ class ContactsDataSource(private val contentResolver: ContentResolver) {
                     val normalizedPhoneNumber = PhoneNumberUtils.normalizeNumber(rawPhoneNumber)
                     val photoUri = cursor.getString(photoIndex)
 
-                    val contact = contactMap.getOrPut(contactId) {
-                        Contact(
+                    val numbers = numbersByContact.getOrPut(contactId) {
+                        contactMap[contactId] = Contact(
                             id = contactId,
                             name = name,
                             phoneNumbers = mutableListOf(),
                             email = null,
                             photoUri = photoUri
                         )
+                        LinkedHashSet()
                     }
-
-//                    (contact.phoneNumbers as MutableList).add(normalizedPhoneNumber)
-                    if (!contact.phoneNumbers.contains(normalizedPhoneNumber)) {
-                        (contact.phoneNumbers as MutableList).add(normalizedPhoneNumber)
-                    }
+                    numbers.add(normalizedPhoneNumber)
                 }
 
-                // Fetch emails for all contacts in a single batch query
-                val contactIds = contactMap.keys.joinToString(",")
-                if (contactIds.isNotEmpty()) {
-                    val emailCursor = contentResolver.query(
-                        ContactsContract.CommonDataKinds.Email.CONTENT_URI,
-                        arrayOf(
-                            ContactsContract.CommonDataKinds.Email.CONTACT_ID,
-                            ContactsContract.CommonDataKinds.Email.ADDRESS
-                        ),
-                        "${ContactsContract.CommonDataKinds.Email.CONTACT_ID} IN ($contactIds)",
-                        null,
-                        null
-                    )
+                // Fetch every email in one flat table scan and join in memory.
+                // This avoids building a huge "CONTACT_ID IN (...)" clause, which
+                // is slow to plan and can hit SQLite's expression limit.
+                contentResolver.query(
+                    ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                    arrayOf(
+                        ContactsContract.CommonDataKinds.Email.CONTACT_ID,
+                        ContactsContract.CommonDataKinds.Email.ADDRESS
+                    ),
+                    null,
+                    null,
+                    null
+                )?.use { ec ->
+                    val emailContactIdIndex = ec.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTACT_ID)
+                    val emailIndex = ec.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS)
 
-                    emailCursor?.use { ec ->
-                        val contactIdIndex = ec.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTACT_ID)
-                        val emailIndex = ec.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS)
-
-                        while (ec.moveToNext()) {
-                            val contactId = ec.getString(contactIdIndex) ?: continue
-                            val email = ec.getString(emailIndex)
-                            contactMap[contactId]?.email = email
+                    while (ec.moveToNext()) {
+                        val contactId = ec.getString(emailContactIdIndex) ?: continue
+                        val contact = contactMap[contactId] ?: continue
+                        if (contact.email == null) {
+                            contact.email = ec.getString(emailIndex)
                         }
                     }
                 }
 
-                // Add contacts to the final list
+                // Materialize the phone numbers onto each contact.
+                contactMap.forEach { (id, contact) ->
+                    (contact.phoneNumbers as MutableList).addAll(numbersByContact[id].orEmpty())
+                }
                 contacts.addAll(contactMap.values)
             }
         } catch (e: Exception) {

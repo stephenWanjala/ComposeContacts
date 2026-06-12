@@ -14,7 +14,7 @@ class ContactsListViewModel(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    private val _state = MutableStateFlow(ContactsListState())
+    private val _state = MutableStateFlow(ContactsListState(isLoading = true))
     val state = combine(_state, _searchQuery) { state, query ->
         val trimmedQuery = query.trim()
         if (trimmedQuery.isEmpty()) {
@@ -35,7 +35,7 @@ class ContactsListViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = ContactsListState()
+            initialValue = ContactsListState(isLoading = true)
         )
 
     fun updateSearchQuery(query: String) {
