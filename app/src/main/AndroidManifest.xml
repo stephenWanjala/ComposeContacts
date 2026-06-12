@@ -32,6 +32,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <provider
+            android:name=".contacts.contactslist.data.search.ContactsSuggestionProvider"
+            android:authorities="com.githu.stephenwanjala.composecontacts.search.suggestions"
+            android:exported="false" />
     </application>
 
 </manifest>

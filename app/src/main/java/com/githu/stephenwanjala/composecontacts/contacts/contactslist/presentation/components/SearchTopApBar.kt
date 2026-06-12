@@ -105,117 +105,55 @@ fun SearchTopAppBar(
 fun SearchableLargeTopAppBar(
     numberOfContacts: Int,
     isCollapsed: Boolean,
-    searchQuery: String,
-    isSearchActive: Boolean,
-    onSearchQueryChange: (String) -> Unit,
     onSearchClick: () -> Unit,
-    onSearchDismiss: () -> Unit,
     onSettingsClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior? = null,
-    searchScrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
-    AnimatedContent(
-        targetState = isSearchActive,
-        transitionSpec = {
-            fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
-        },
-        label = "SearchableLargeTopAppBarTransition"
-    ) { searchActive ->
-        if (searchActive) {
-
-            val focusRequester = remember { FocusRequester() }
-
-
-            LaunchedEffect(Unit) {
-                focusRequester.requestFocus()
+    LargeTopAppBar(
+        title = {
+            Column(
+                modifier = Modifier.animateContentSize()
+            ) {
+                if (isCollapsed) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Contacts",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(
+                            text = "$numberOfContacts Contacts",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                } else {
+                    Column {
+                        Text(
+                            text = "Contacts",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Text(
+                            text = "$numberOfContacts Contacts",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
             }
-
-            TopAppBar(
-                title = {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = onSearchQueryChange,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 8.dp)
-                            .focusRequester(focusRequester),
-                        placeholder = { Text("Search Contacts...") },
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = Color.Transparent,
-                        ),
-                        textStyle = MaterialTheme.typography.bodyLarge
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onSearchDismiss) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = "Close search"
-                        )
-                    }
-                },
-                actions = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { onSearchQueryChange("") }) {
-                            Icon(
-                                imageVector = Icons.Outlined.Clear,
-                                contentDescription = "Clear search"
-                            )
-                        }
-                    }
-                },
-                scrollBehavior = searchScrollBehavior
-            )
-        } else {
-            LargeTopAppBar(
-                title = {
-                    Column(
-                        modifier = Modifier.animateContentSize()
-                    ) {
-                        if (isCollapsed) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "Contacts",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                Text(
-                                    text = "$numberOfContacts Contacts",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        } else {
-                            Column {
-                                Text(
-                                    text = "Contacts",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                                Text(
-                                    text = "$numberOfContacts Contacts",
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-                        }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onSearchClick) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search Contact"
-                        )
-                    }
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings"
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior
-            )
-        }
-    }
+        },
+        actions = {
+            IconButton(onClick = onSearchClick) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search Contact"
+                )
+            }
+            IconButton(onClick = onSettingsClick) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings"
+                )
+            }
+        },
+        scrollBehavior = scrollBehavior
+    )
 }

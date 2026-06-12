@@ -33,6 +33,7 @@ import androidx.navigation.NavHostController
 import com.githu.stephenwanjala.composecontacts.Screen
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.domain.model.Contact
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.ContactItem
+import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.ContactsSearchBar
 import com.githu.stephenwanjala.composecontacts.contacts.contactslist.presentation.components.SearchableLargeTopAppBar
 import com.githu.stephenwanjala.composecontacts.core.presenation.components.PermissionRequestScreen
 import org.koin.androidx.compose.koinViewModel
@@ -46,7 +47,6 @@ fun ContactListScreen(
     animatedVisibilityScope: AnimatedVisibilityScope
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val searchScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val collapsedFraction = scrollBehavior.state.collapsedFraction
     val isCollapsed = collapsedFraction > 0.5f // Threshold to switch layout state
 
@@ -58,6 +58,21 @@ fun ContactListScreen(
             val viewModel: ContactsListViewModel = koinViewModel()
             val searchQuery = viewModel.searchQuery.collectAsStateWithLifecycle()
             val state = viewModel.state.collectAsStateWithLifecycle()
+            val recentSuggestions = viewModel.recentSuggestions.collectAsStateWithLifecycle()
+
+            val navigateToContact: (Contact) -> Unit = { contact ->
+                navHostController.navigate(
+                    Screen.ContactDetailsDestination(
+                        id = contact.id,
+                        name = contact.name,
+                        phoneNumbers = contact.phoneNumbers,
+                        photoUri = contact.photoUri,
+                        email = contact.email
+                    )
+                )
+            }
+
+          Box(modifier = Modifier.fillMaxSize()) {
             Scaffold(
                 floatingActionButton = {
                     Column(
@@ -93,19 +108,9 @@ fun ContactListScreen(
                     SearchableLargeTopAppBar(
                         numberOfContacts = state.value.contacts.size,
                         scrollBehavior = scrollBehavior,
-                        searchScrollBehavior = searchScrollBehavior,
                         isCollapsed = isCollapsed,
-                        searchQuery = searchQuery.value,
-                        isSearchActive = state.value.isSearchActive,
-                        onSearchQueryChange = { newQuery ->
-                            viewModel.updateSearchQuery(newQuery)
-                        },
                         onSearchClick = {
                             viewModel.updateSearchState(true)
-                        },
-                        onSearchDismiss = {
-                            viewModel.updateSearchState(false)
-                            viewModel.updateSearchQuery("")
                         },
                         onSettingsClick = {},
                     )
@@ -115,18 +120,8 @@ fun ContactListScreen(
                     modifier = Modifier
                         .padding(innerPaddings)
                         .consumeWindowInsets(innerPaddings)
-                        .nestedScroll(if (state.value.isSearchActive) searchScrollBehavior.nestedScrollConnection else scrollBehavior.nestedScrollConnection),
-                    onClickContact = { contact ->
-                        navHostController.navigate(
-                            Screen.ContactDetailsDestination(
-                                id = contact.id,
-                                name = contact.name,
-                                phoneNumbers = contact.phoneNumbers,
-                                photoUri = contact.photoUri,
-                                email = contact.email
-                            )
-                        )
-                    },
+                        .nestedScroll(scrollBehavior.nestedScrollConnection),
+                    onClickContact = navigateToContact,
                     onRefresh = {
                         viewModel.onAction(ContactListAction.RefreshContacts)
                     },
@@ -135,6 +130,31 @@ fun ContactListScreen(
                     animatedVisibilityScope = animatedVisibilityScope
                 )
             }
+
+            if (state.value.isSearchActive) {
+                ContactsSearchBar(
+                    query = searchQuery.value,
+                    results = state.value.groupedContacts.values.flatten(),
+                    recentSuggestions = recentSuggestions.value,
+                    onQueryChange = viewModel::updateSearchQuery,
+                    onSearch = viewModel::onSearchSubmit,
+                    onSuggestionClick = { suggestion ->
+                        viewModel.onSearchSubmit(suggestion)
+                    },
+                    onResultClick = { contact ->
+                        viewModel.onSearchSubmit(searchQuery.value)
+                        viewModel.updateSearchState(false)
+                        viewModel.updateSearchQuery("")
+                        navigateToContact(contact)
+                    },
+                    onClearHistory = viewModel::clearSearchHistory,
+                    onDismiss = {
+                        viewModel.updateSearchState(false)
+                        viewModel.updateSearchQuery("")
+                    }
+                )
+            }
+          }
         }
 
     }
